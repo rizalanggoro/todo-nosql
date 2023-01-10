@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Todo Project | Deta Database</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script
+      defer
+      src="https://unpkg.com/alpinejs@3.10.5/dist/cdn.min.js"
+    ></script>
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@48,400,0,0"
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap"
+      rel="stylesheet"
+    />
+
+    <style type="text/tailwindcss">
+      body {
+        font-family: "Poppins", sans-serif;
+      }
+
+      .my-button {
+        @apply bg-indigo-600 select-none cursor-pointer hover:opacity-70 duration-300 rounded inline-block py-2 px-4 text-white text-sm hover:shadow;
+      }
+      .my-icon-button {
+        @apply cursor-pointer select-none hover:border-indigo-600 rounded border border-transparent duration-300 hover:text-indigo-600 text-gray-600;
+      }
+      .my-input {
+        @apply bg-transparent outline-none border rounded block w-full py-2 px-4 focus:border-indigo-600 duration-300 resize-none hover:border-indigo-300;
+      }
+      .my-subtitle {
+        @apply font-bold text-xl;
+      }
+
+      .custom-size {
+        @apply lg:w-[512px] md:w-[512px] sm:w-[512px];
+      }
+    </style>
+  </head>
+  <body x-data>
+    <!-- app bar -->
+    <div class="bg-white border-b h-16 fixed w-full">
+      <div
+        class="custom-size mx-auto bg-white backdrop-blur bg-opacity-70 h-16 flex sm:px-0 px-4 items-center"
+      >
+        <div>
+          <p class="text-black hover:underline duration-300 font-semibold">
+            Modern Todo
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- content -->
+    <div class="mx-auto custom-size pt-16 pb-8 px-4 sm:px-0">
+      <!-- user id -->
+      <div class="mt-4 flex items-center">
+        <input
+          type="text"
+          class="my-input"
+          placeholder="User id"
+          x-data
+          x-model="$store.userid.userid"
+          x-init="$watch('$store.userid.userid', value => console.log(value))"
+        />
+        <div class="ml-2">
+          <div class="my-button" x-data x-on:click="$store.userid.saveUserid()">
+            <p>Save</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- form -->
+      <template x-if="$store.appdata.showForm">
+        <div class="border mt-4 p-4 rounded">
+          <p class="my-subtitle">Create a new task</p>
+
+          <input
+            type="text"
+            x-model="$store.appdata.titleModel"
+            class="my-input mt-4"
+            placeholder="Title..."
+          />
+          <textarea
+            x-model="$store.appdata.descModel"
+            type="text"
+            class="my-input h-32 mt-2"
+            placeholder="Description..."
+          ></textarea>
+
+          <!-- loading text -->
+          <template x-data x-if="$store.todo.state == 'loading'">
+            <div class="mt-4 text-right text-gray-600">
+              <p>Creating new task...</p>
+            </div>
+          </template>
+
+          <template
+            x-data="{ state: $store.todo.state }"
+            x-if="state === 'initial'"
+          >
+            <div class="flex justify-end">
+              <div
+                class="my-button mt-4"
+                x-on:click="$store.todo.createTodo($store.userid.userid, $store.appdata.titleModel, $store.appdata.descModel)"
+              >
+                <p>Create</p>
+              </div>
+            </div>
+          </template>
+        </div>
+      </template>
+
+      <!-- list todo -->
+      <div>
+        <div class="flex mt-4 items-center">
+          <p class="my-subtitle flex-1">Todo list</p>
+          <div
+            class="my-button"
+            x-on:click="$store.appdata.showForm = !$store.appdata.showForm"
+          >
+            <p x-text="$store.appdata.showForm ? 'Cancel' : 'Add'"></p>
+          </div>
+        </div>
+
+        <template x-data x-for="(todo, index) in $store.todo.listTodo">
+          <div
+            x-data="{ data: todo.data }"
+            class="rounded border p-4 flex items-center"
+            x-bind:class="index == 0 ? 'mt-4' : 'mt-2'"
+          >
+            <div class="flex-1">
+              <p x-text="todo.key" class="text-[10px] text-gray-600"></p>
+              <p
+                x-text="data.title"
+                class="text-lg text-black font-semibold mt-2"
+                x-bind:class="data.done ? 'line-through' : ''"
+              ></p>
+              <p
+                x-text="data.description"
+                class="text-gray-600"
+                x-bind:class="data.done ? 'line-through' : ''"
+              ></p>
+            </div>
+
+            <!-- actions -->
+            <div class="flex items-center">
+              <template x-if="!data.done">
+                <span
+                  class="material-symbols-outlined my-icon-button"
+                  x-on:click="$store.todo.changeStatus(todo.key, index, true)"
+                >
+                  done
+                </span>
+              </template>
+              <template x-if="data.done">
+                <span
+                  class="material-symbols-outlined my-icon-button"
+                  x-on:click="$store.todo.changeStatus(todo.key, index, false)"
+                >
+                  remove_done
+                </span>
+              </template>
+              <span
+                class="ml-2 material-symbols-outlined my-icon-button"
+                x-on:click="$store.todo.delete(todo.key, index)"
+              >
+                delete
+              </span>
+            </div>
+          </div>
+        </template>
+      </div>
+    </div>
+
+    <script src="appdata.js"></script>
+    <script src="store-todo.js"></script>
+    <script src="store-userid.js"></script>
+  </body>
+</html>
